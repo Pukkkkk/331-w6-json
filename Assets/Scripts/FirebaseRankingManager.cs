@@ -102,6 +102,7 @@ public class FirebaseRankingManager : MonoBehaviour
     {
         /*TestSetData();
         TestSetData2();*/
+        ReloadSortingData();
     }
 
     [ContextMenu("Set Local Data to Database")]
