@@ -100,8 +100,6 @@ public class FirebaseRankingManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        /*TestSetData();
-        TestSetData2();*/
         ReloadSortingData();
     }
 
@@ -178,9 +176,21 @@ public class FirebaseRankingManager : MonoBehaviour
         });
     }
 
-    // Update is called once per frame
-    void Update()
+    public void AddDataWithSorting()
     {
-        
+        string urlData = $"{url}/ranking/playerDatas.json?auth={secret}";
+
+        RestClient.Get(urlData).Then(response =>
+        {
+            Debug.Log(response.Text);
+            JSONNode jsonNode = JSONNode.Parse(response.Text);
+
+            ranking = new Ranking();
+            ranking.playerDatas = new List<PlayerData>();
+            for(int i = 0; i < jsonNode.Count; i++)
+            {
+                ranking.playerDatas.Add(new PlayerData(jsonNode[i]["rankNumber"], jsonNode[i]["playerName"], jsonNode[i]["playerScore"], null));
+            }
+        });
     }
 }
