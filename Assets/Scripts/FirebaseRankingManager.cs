@@ -141,6 +141,7 @@ public class FirebaseRankingManager : MonoBehaviour
     public void ReloadSortingData()
     {
         string urlData = $"{url}/ranking/playerDatas.json>auth={secret}";
+
         RestClient.Get(urlData).Then(response =>
         {
             Debug.Log(response.Text);
@@ -152,7 +153,7 @@ public class FirebaseRankingManager : MonoBehaviour
             {
                 ranking.playerDatas.Add(new PlayerData(
                     jsonNode[i]["rankNumber"],
-                    jsonNode[i]["plyerName"],
+                    jsonNode[i]["playerName"],
                     jsonNode[i]["playerScore"],
                     null));
             }
