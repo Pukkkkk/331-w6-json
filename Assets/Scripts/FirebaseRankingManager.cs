@@ -17,6 +17,14 @@ public class FirebaseRankingManager : MonoBehaviour
     public const string url = "https://testleaderboard-33a01-default-rtdb.asia-southeast1.firebasedatabase.app";
     public const string secret = "HWMVyRMPBSisFQZn1loT1MUP3s58LfVgsCfKb4MF";
 
+    [Header("Main")]
+    public RankUIManager rankUIManager;
+    public Ranking ranking;
+
+    [Header("New Data")]
+    public PlayerData currentPlayerData;
+    private List<PlayerData> sortPlayerDatas = new List<PlayerData>();
+
     #region Test
 
     [Header("Test")] 
@@ -88,15 +96,6 @@ public class FirebaseRankingManager : MonoBehaviour
 
     #endregion
 
-    [Header("Main")] 
-    public RankUIManager rankUIManager;
-    public Ranking ranking;
-
-    [Header("New Data")]
-    public PlayerData currentPlayerData;
-    private List<PlayerData> sortPlayerDatas = new List<PlayerData>();
-
-
     // Start is called before the first frame update
     void Start()
     {
@@ -116,7 +115,7 @@ public class FirebaseRankingManager : MonoBehaviour
         });
     }
     
-    private void CalculateSortRankData()
+    private void CalculateRankFromScore()
     {
         List<PlayerData> sortRankPlayers = new List<PlayerData>();
         sortRankPlayers = ranking.playerDatas.OrderByDescending(data => data.playerScore).ToList();
@@ -157,7 +156,8 @@ public class FirebaseRankingManager : MonoBehaviour
                     jsonNode[i]["playerScore"],
                     null));
             }
-            CalculateSortRankData();
+
+            CalculateRankFromScore();
 
             string urlPlayerData = $"{url}/ranking/.json?auth={secret}";
 
@@ -171,6 +171,7 @@ public class FirebaseRankingManager : MonoBehaviour
             {
                 Debug.Log("error on set to server");
             });
+
         }).Catch(error =>
         {
             Debug.Log("Error to get data from server");
@@ -192,6 +193,37 @@ public class FirebaseRankingManager : MonoBehaviour
             {
                 ranking.playerDatas.Add(new PlayerData(jsonNode[i]["rankNumber"], jsonNode[i]["playerName"], jsonNode[i]["playerScore"], null));
             }
+
+            PlayerData checkPlayerData = ranking.playerDatas.FirstOrDefault(data => data.playerName == currentPlayerData.playerName);
+            int indexOfPlayer = ranking.playerDatas.IndexOf(checkPlayerData);
+
+            if(checkPlayerData.playerName != null)
+            {
+                checkPlayerData.playerScore = currentPlayerData.playerScore;
+                ranking.playerDatas[indexOfPlayer] = checkPlayerData;
+            }
+            else
+            {
+                ranking.playerDatas.Add(currentPlayerData);
+            }
+
+            CalculateRankFromScore();
+
+            string urlPlayerData = $"{url}/ranking/.json?auth={secret}";
+
+            RestClient.Put<Ranking>(urlPlayerData, ranking).Then(response =>
+            {
+                Debug.Log("Upload Data Complete");
+                rankUIManager.playerDatas = ranking.playerDatas;
+                rankUIManager.ReloadRankData();
+                FindYourDataInRanking();
+            }).Catch(error =>
+            {
+                Debug.Log("error on set to server");
+            });
+        }).Catch(error =>
+        {
+            Debug.Log("error");
         });
     }
 }
